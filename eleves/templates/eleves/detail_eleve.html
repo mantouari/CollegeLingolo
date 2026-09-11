@@ -1,0 +1,178 @@
+<!-- {# ==========================================================================
+   DÉTAIL D'UN ÉLÈVE - Fiche complète avec notes
+   ===========================================================================
+   Affiche toutes les informations d'un élève et ses notes.
+   La variable "eleve" vient de la vue detail_eleve() dans views.py.
+   ========================================================================== #}-->
+
+{% extends 'eleves/base.html' %}
+
+{% block title %}{{ eleve.prenom }} {{ eleve.nom }} - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<!-- Fil d'Ariane (breadcrumb) pour la navigation -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_eleves' %}">Élèves</a></li>
+        <li class="breadcrumb-item active">{{ eleve.prenom }} {{ eleve.nom }}</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <!-- ================================================================= -->
+    <!-- COLONNE GAUCHE : Informations personnelles                        -->
+    <!-- ================================================================= -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-circle me-2"></i>{{ eleve.prenom }} {{ eleve.nom }}
+                </h5>
+                <div>
+                    <a href="{% url 'modifier_eleve' eleve.pk %}"
+                       class="btn btn-sm btn-light">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'supprimer_eleve' eleve.pk %}"
+                       class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <th class="text-muted" style="width: 40%;">Classe</th>
+                        <td>
+                            {% if eleve.classe %}
+                                <a href="{% url 'detail_classe' eleve.classe.pk %}">
+                                    {{ eleve.classe }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Non affecté</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Sexe</th>
+                        <td>{{ eleve.get_sexe_display }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Date de naissance</th>
+                        <td>{{ eleve.date_naissance|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Statut</th>
+                        <td>
+                            {% if eleve.statut == 'nouveau' %}
+                                <span class="badge bg-success">Nouveau</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Redoublant</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Adresse</th>
+                        <td>{{ eleve.adresse|default:"Non renseignée" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Parent/Tuteur</th>
+                        <td>{{ eleve.nom_parent|default:"Non renseigné" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Tél. parent</th>
+                        <td>{{ eleve.telephone_parent|default:"Non renseigné" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Inscrit le</th>
+                        <td>{{ eleve.date_inscription|date:"d/m/Y à H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- COLONNE DROITE : Notes de l'élève                                 -->
+    <!-- ================================================================= -->
+    <div class="col-lg-7">
+        <!-- Carte moyenne -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Moyenne générale</h6>
+                {% if moyenne %}
+                    <h2 class="display-4 {% if moyenne >= 10 %}text-success{% elif moyenne >= 7 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ moyenne|floatformat:2 }} / 20
+                    </h2>
+                {% else %}
+                    <h2 class="display-4 text-muted">Aucune note</h2>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tableau des notes -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-journal-bookmark me-2"></i>Notes</h5>
+                <a href="{% url 'ajouter_note' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg"></i> Ajouter
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if notes %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Matière</th>
+                                <th>Note</th>
+                                <th>Trimestre</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for note in notes %}
+                            <tr>
+                                <td>{{ note.matiere }}</td>
+                                <td>
+                                    {% if note.valeur >= 10 %}
+                                        <span class="badge bg-success">{{ note.valeur }}/20</span>
+                                    {% elif note.valeur >= 7 %}
+                                        <span class="badge bg-warning text-dark">{{ note.valeur }}/20</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ note.valeur }}/20</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ note.get_trimestre_display }}</td>
+                                <td>{{ note.date_evaluation|date:"d/m/Y" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'modifier_note' note.pk %}"
+                                           class="btn btn-outline-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'supprimer_note' note.pk %}"
+                                           class="btn btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="text-muted text-center py-4">
+                        Aucune note pour cet élève.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

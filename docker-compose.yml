@@ -1,0 +1,109 @@
+# =============================================================================
+# DOCKER COMPOSE - Collège Lingolo
+# =============================================================================
+# Docker Compose orchestre DEUX services (conteneurs) :
+#   1. db  → PostgreSQL (la base de données)
+#   2. web → Django (l'application web)
+#
+# Commandes essentielles :
+#   docker-compose up --build        → Construire et lancer (1ère fois)
+#   docker-compose up                → Lancer (fois suivantes)
+#   docker-compose down              → Arrêter tout
+#   docker-compose down -v           → Arrêter + SUPPRIMER les données
+#   docker-compose logs web          → Voir les logs de Django
+#   docker-compose exec web bash     → Ouvrir un terminal dans le conteneur
+#
+# IMPORTANT : Les données PostgreSQL sont persistées dans un "volume"
+# Docker. Même si vous arrêtez les conteneurs, les données restent.
+# Seul "docker-compose down -v" supprime les données.
+# =============================================================================
+
+services:
+
+  # ===========================================================================
+  # SERVICE 1 : PostgreSQL (base de données)
+  # ===========================================================================
+  db:
+    # Image officielle PostgreSQL version 16 (légère, basée sur Alpine Linux)
+    image: postgres:16-alpine
+
+    # Variables d'environnement pour configurer PostgreSQL au premier lancement
+    # Ces valeurs sont lues par settings.py via os.environ.get()
+    environment:
+      POSTGRES_DB: CollegeLingolo        # Nom de la base de données à créer
+      POSTGRES_USER: college_admin        # Nom de l'utilisateur PostgreSQL
+      POSTGRES_PASSWORD: college2026      # Mot de passe (à changer en prod !)
+
+    # Volume : stocke les données PostgreSQL sur le disque de l'hôte
+    # Sans ça, les données seraient perdues à chaque redémarrage du conteneur
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    # Port exposé : permet de se connecter à PostgreSQL depuis l'hôte
+    # (utile pour les outils comme pgAdmin, DBeaver, etc.)
+    ports:
+      - "5432:5432"
+
+    # Vérification de santé : Docker vérifie régulièrement que PostgreSQL
+    # est prêt à recevoir des connexions avant de lancer Django
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U college_admin -d CollegeLingolo"]
+      interval: 5s       # Vérifier toutes les 5 secondes
+      timeout: 5s        # Abandonner si pas de réponse après 5s
+      retries: 5         # Réessayer 5 fois avant de déclarer "unhealthy"
+
+  # ===========================================================================
+  # SERVICE 2 : Django (application web)
+  # ===========================================================================
+  web:
+    # Construire l'image à partir du Dockerfile dans le dossier courant
+    build: .
+
+    # Commande exécutée au démarrage :
+    # 1. migrate → crée/met à jour les tables dans PostgreSQL
+    # 2. creer_utilisateurs → crée les 3 comptes par défaut
+    # 3. gunicorn → lance le serveur web de production
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py creer_utilisateurs &&
+             gunicorn CollegeLingolo.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+
+    # Mapping de ports : localhost:8000 → conteneur:8000
+    ports:
+      - "8000:8000"
+
+    # Variables d'environnement pour Django
+    # POSTGRES_HOST=db → "db" est le nom du service PostgreSQL ci-dessus.
+    # Docker Compose crée un réseau interne où les services se contactent
+    # par leur nom. Donc "db" = l'adresse IP du conteneur PostgreSQL.
+    environment:
+      - DJANGO_DEBUG=True
+      - DJANGO_SECRET_KEY=cle-secrete-docker-local-dev-seulement
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+      - POSTGRES_DB=CollegeLingolo
+      - POSTGRES_USER=college_admin
+      - POSTGRES_PASSWORD=college2026
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+
+    # depends_on + condition : Django ne démarre qu'une fois PostgreSQL prêt
+    # Sans ça, Django pourrait essayer de se connecter à une BDD pas encore lancée
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Redémarre automatiquement si le conteneur plante
+    restart: unless-stopped
+
+
+# =============================================================================
+# VOLUMES : stockage persistant
+# =============================================================================
+# Les volumes Docker stockent les données en dehors des conteneurs.
+# Même après "docker-compose down", les données restent.
+# Pour tout supprimer : "docker-compose down -v" (ATTENTION: perte de données !)
+
+volumes:
+  postgres_data:
+    # Ce volume stocke les fichiers de la base PostgreSQL
+    # sur le disque de votre PC (géré par Docker)

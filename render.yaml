@@ -1,0 +1,57 @@
+# =============================================================================
+# render.yaml - Configuration pour le déploiement sur Render.com
+# =============================================================================
+# Ce fichier permet à Render de configurer automatiquement les services
+# quand vous connectez votre repo GitHub.
+#
+# Deux services sont créés :
+#   1. Une base PostgreSQL
+#   2. L'application Django
+# =============================================================================
+
+databases:
+  - name: college-lingolo-db
+    plan: free
+    databaseName: college_lingolo
+    user: college_admin
+
+services:
+  - type: web
+    name: college-lingolo
+    runtime: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput &&
+      python manage.py migrate --noinput &&
+      python manage.py creer_utilisateurs
+    startCommand: gunicorn college_lingolo.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: college-lingolo-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: college-lingolo-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: college-lingolo-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: college-lingolo-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: college-lingolo-db
+          property: passwor

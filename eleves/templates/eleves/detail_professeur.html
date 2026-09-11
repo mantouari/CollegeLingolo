@@ -1,0 +1,59 @@
+{% extends 'eleves/base.html' %}
+
+{% block title %}{{ professeur }} - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_professeurs' %}">Professeurs</a></li>
+        <li class="breadcrumb-item active">{{ professeur }}</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>{{ professeur }}</h5>
+                <div>
+                    <a href="{% url 'modifier_professeur' professeur.pk %}" class="btn btn-sm btn-light">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'supprimer_professeur' professeur.pk %}" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th class="text-muted" style="width: 35%;">Spécialité</th>
+                        <td>{{ professeur.specialite|default:"Non définie" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Téléphone</th>
+                        <td>{{ professeur.telephone|default:"Non renseigné" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Email</th>
+                        <td>{{ professeur.email|default:"Non renseigné" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Matières</th>
+                        <td>
+                            {% for matiere in professeur.matieres.all %}
+                                <span class="badge bg-info me-1">{{ matiere.nom }} (coef. {{ matiere.coefficient }})</span>
+                            {% empty %}
+                                <span class="text-muted">Aucune matière assignée</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+<!-- {# ==========================================================================
+   CONFIRMATION DE SUPPRESSION
+   ===========================================================================
+   Template générique réutilisé pour supprimer tout type d'objet.
+   Les variables "objet", "type_objet" et "url_retour" sont passées par la vue.
+
+   La suppression se fait en 2 étapes :
+   1. GET  → affiche cette page de confirmation
+   2. POST → effectue la suppression (le formulaire ci-dessous)
+   ========================================================================== #}-->
+
+{% extends 'eleves/base.html' %}
+
+{% block title %}Supprimer {{ type_objet }} - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body text-center py-4">
+                <div class="display-1 text-danger mb-3">
+                    <i class="bi bi-trash"></i>
+                </div>
+                <p class="lead">
+                    Êtes-vous sûr de vouloir supprimer {{ type_objet }} :
+                </p>
+                <p class="h4 fw-bold">{{ objet }}</p>
+                <p class="text-muted">
+                    Cette action est irréversible.
+                </p>
+
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <a href="{% url url_retour %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-arrow-left me-1"></i>Annuler
+                    </a>
+                    <!-- Le formulaire POST déclenche la suppression -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-trash me-1"></i>Oui, supprimer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

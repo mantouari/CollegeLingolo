@@ -1,0 +1,98 @@
+<!-- {# ==========================================================================
+   FORMULAIRE ÉLÈVE - Ajout et modification
+   ===========================================================================
+   Ce template est réutilisé pour l'AJOUT et la MODIFICATION d'un élève.
+   Les variables "titre" et "bouton" changent selon le contexte.
+
+   Django génère automatiquement les champs du formulaire à partir de
+   EleveForm (forms.py). On peut :
+   - Afficher tout d'un coup : form.as_p
+   - Ou champ par champ : form.nom pour plus de contrôle
+
+   csrf_token est OBLIGATOIRE dans tout formulaire POST Django.
+   C'est une protection contre les attaques CSRF (Cross-Site Request Forgery).
+   Sans lui, Django rejettera le formulaire avec une erreur 403.
+   ========================================================================== #}-->
+
+{% extends 'eleves/base.html' %}
+
+{% block title %}{{ titre }} - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_eleves' %}">Élèves</a></li>
+        <li class="breadcrumb-item active">{{ titre }}</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-plus me-2"></i>{{ titre }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- method="POST" : envoie les données au serveur -->
+                <!-- action="" : envoie vers la même URL (la vue gère GET et POST) -->
+                <form method="POST">
+                    <!-- Protection CSRF obligatoire -->
+                    {% csrf_token %}
+
+                    <!-- Affichage des erreurs globales du formulaire -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- On affiche chaque champ manuellement pour un meilleur contrôle -->
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <!-- Le label du champ -->
+                        <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
+
+                        <!-- Le champ de saisie (généré par Django selon le widget) -->
+                        {{ field }}
+
+                        <!-- Texte d'aide (help_text du modèle) -->
+                        {% if field.help_text %}
+                            <div class="form-text text-muted">{{ field.help_text }}</div>
+                        {% endif %}
+
+                        <!-- Messages d'erreur spécifiques au champ -->
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <!-- Boutons d'action -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'liste_eleves' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ bouton }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

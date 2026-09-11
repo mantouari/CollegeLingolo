@@ -1,0 +1,36 @@
+# =============================================================================
+# .gitignore - Fichiers à ne PAS envoyer sur GitHub
+# =============================================================================
+# Git ignorera ces fichiers lors des commits.
+# Règle d'or : ne jamais versionner les fichiers générés automatiquement,
+# les secrets, ou les fichiers spécifiques à votre machine.
+# =============================================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Environnement virtuel ---
+venv/
+env/
+.venv/
+
+# --- Base de données locale ---
+db.sqlite3
+
+# --- Fichiers statiques collectés (générés par collectstatic) ---
+staticfiles/
+
+# --- Variables d'environnement (secrets !) ---
+.env
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- OS ---
+.DS_Store
+Thumbs.db

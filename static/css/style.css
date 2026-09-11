@@ -1,0 +1,69 @@
+/*
+=============================================================================
+CSS PERSONNALISÉ - Collège Lingolo
+=============================================================================
+Ce fichier contient les styles qui complètent Bootstrap 5.
+Bootstrap fournit déjà 90% du design, ici on affine les détails.
+
+Conseil : toujours préférer les classes Bootstrap (mb-3, text-primary...)
+plutôt que d'écrire du CSS personnalisé. Ça rend le code plus maintenable.
+=============================================================================
+*/
+
+/* ---- Corps de la page ---- */
+body {
+    background-color: #f5f7fa;           /* Fond gris clair au lieu du blanc pur */
+    min-height: 100vh;                   /* La page prend au minimum toute la hauteur */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Le contenu principal prend tout l'espace disponible */
+/* Cela pousse le footer en bas de page */
+main {
+    flex: 1;
+}
+
+/* ---- Cartes (cards) ---- */
+.card {
+    border-radius: 12px;                 /* Coins arrondis */
+    transition: transform 0.2s ease;     /* Animation fluide au survol */
+}
+
+.card:hover {
+    transform: translateY(-2px);         /* Légère élévation au survol */
+}
+
+/* ---- Navbar ---- */
+.navbar-brand {
+    font-size: 1.3rem;
+}
+
+/* ---- Tableau ---- */
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+
+/* ---- Badges (notes colorées) ---- */
+.badge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.7em;
+}
+
+/* ---- Footer ---- */
+footer {
+    margin-top: auto;                    /* Pousse le footer tout en bas */
+}
+
+/* ---- Barre de progression ---- */
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}

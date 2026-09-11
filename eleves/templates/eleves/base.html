@@ -1,0 +1,166 @@
+<!-- ==========================================================================
+   TEMPLATE DE BASE - Collège Lingolo
+   ===========================================================================
+   Ce template est le "squelette" de toutes les pages du site.
+   Les autres templates en héritent avec le tag "extends".
+
+   Concepts Django Template :
+   - "block nom...endblock" : zone remplaçable par les templates enfants
+   - "url 'nom_route'" : génère l'URL à partir du nom défini dans urls.py
+   - "load static" : charge le système de fichiers statiques (CSS, JS, images)
+   - les doubles accolades affichent la valeur d'une variable du context
+
+   Bootstrap 5 est chargé via CDN (pas besoin de le télécharger).
+   ========================================================================== """-->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <!-- Responsive : le site s'adapte aux écrans mobiles -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Titre dynamique : chaque page peut définir son propre titre -->
+    <title>{% block title %}Collège Lingolo{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS (framework CSS pour un design professionnel) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons (icônes vectorielles) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+          rel="stylesheet">
+
+    <!-- Notre CSS personnalisé (surcharge Bootstrap si besoin) -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ================================================================= -->
+    <!-- BARRE DE NAVIGATION (présente sur toutes les pages)               -->
+    <!-- ================================================================= -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <!-- Logo / Nom du site (lien vers l'accueil) -->
+            <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
+                <i class="bi bi-mortarboard-fill me-2"></i>Collège Lingolo
+            </a>
+
+            <!-- Bouton hamburger pour mobile (Bootstrap responsive) -->
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            {# Liens de navigation #}
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {# Menu principal (à gauche) #}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="bi bi-speedometer2 me-1"></i>Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'liste_eleves' %}">
+                            <i class="bi bi-people me-1"></i>Élèves
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'liste_classes' %}">
+                            <i class="bi bi-building me-1"></i>Classes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'liste_professeurs' %}">
+                            <i class="bi bi-person-badge me-1"></i>Professeurs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'liste_notes' %}">
+                            <i class="bi bi-journal-bookmark me-1"></i>Notes
+                        </a>
+                    </li>
+                    {% if user.is_superuser %}
+                    {# Le lien Admin n'est visible que pour le superutilisateur (directeur) #}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin:index' %}">
+                            <i class="bi bi-gear me-1"></i>Admin
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                {# Infos utilisateur connecté + déconnexion (à droite) #}
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#"
+                           role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>{{ user.username }}
+                        </a>
+                        {# Menu déroulant #}
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <span class="dropdown-item-text text-muted small">
+                                    Connecté en tant que <strong>{{ user.username }}</strong>
+                                    {% if user.is_superuser %}(Admin){% endif %}
+                                </span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                {# Lien de déconnexion via POST (sécurisé) #}
+                                <form method="POST" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-1"></i>Se déconnecter
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ================================================================= -->
+    <!-- CONTENU PRINCIPAL                                                  -->
+    <!-- ================================================================= -->
+    <!-- Chaque page remplace ce bloc avec son propre contenu -->
+    <main class="container my-4">
+        <!-- Messages flash (succès, erreurs...) -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        <!-- Le contenu de chaque page sera injecté ici -->
+        {% endblock %}
+    </main>
+
+    <!-- ================================================================= -->
+    <!-- PIED DE PAGE                                                       -->
+    <!-- ================================================================= -->
+    <footer class="bg-dark text-light py-3 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">
+                &copy; 2026 Collège Lingolo - Système de gestion scolaire
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JavaScript (nécessaire pour le menu hamburger, les alertes...) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bloc pour ajouter du JS spécifique à certaines pages -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

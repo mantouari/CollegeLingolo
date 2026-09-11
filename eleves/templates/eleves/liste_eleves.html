@@ -1,0 +1,159 @@
+<!-- ==========================================================================
+   LISTE DES ÉLÈVES - avec recherche et filtrage
+   ===========================================================================
+   Fonctionnalités :
+   - Barre de recherche (par nom/prénom)
+   - Filtre par classe (menu déroulant)
+   - Tableau responsive avec liens d'action (voir, modifier, supprimer)
+
+   Notions Django Template :
+   - "for eleve in eleves" : boucle sur la liste
+   - "empty" : affiché si la liste est vide
+   - "if / elif / else" : conditions
+   - "eleve.pk" : primary key de l'objet
+   - "url 'nom' arg" : génère l'URL avec un argument
+   ==========================================================================-->
+
+{% extends 'eleves/base.html' %}
+
+{% block title %}Liste des élèves - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-people me-2"></i>Liste des élèves
+    </h1>
+    <a href="{% url 'ajouter_eleve' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Inscrire un élève
+    </a>
+</div>
+
+<!-- ===================================================================== -->
+<!-- BARRE DE RECHERCHE ET FILTRES                                          -->
+<!-- ===================================================================== -->
+<!-- Le formulaire utilise GET (pas POST) car c'est une recherche, pas une modification -->
+<!-- Les paramètres apparaissent dans l'URL : /eleves/?q=dupont&classe=1 -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <!-- Champ de recherche textuelle -->
+            <div class="col-md-5">
+                <label for="q" class="form-label">Rechercher</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    {# value="query" : pré-remplit le champ avec la recherche en cours #}
+                    <input type="text" name="q" id="q" class="form-control"
+                           placeholder="Nom ou prénom..." value="{{ query }}">
+                </div>
+            </div>
+
+            <!-- Filtre par classe -->
+            <div class="col-md-4">
+                <label for="classe" class="form-label">Filtrer par classe</label>
+                <select name="classe" id="classe" class="form-select">
+                    <option value="">Toutes les classes</option>
+                    {% for c in classes %}
+                        <!-- selected : pré-sélectionne la classe active -->
+                        <!-- |stringformat:"i" convertit l'entier en string pour la comparaison -->
+                        <option value="{{ c.pk }}"
+                            {% if classe_id == c.pk|stringformat:"i" %}selected{% endif %}>
+                            {{ c }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Boutons -->
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i>Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- TABLEAU DES ÉLÈVES                                                     -->
+<!-- ===================================================================== -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Nom complet</th>
+                        <th>Classe</th>
+                        <th>Sexe</th>
+                        <th>Statut</th>
+                        <th>Date de naissance</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- forloop.counter : compteur de la boucle (commence à 1) -->
+                    {% for eleve in eleves %}
+                    <tr>
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'detail_eleve' eleve.pk %}"
+                               class="text-decoration-none fw-semibold">
+                                {{ eleve.prenom }} {{ eleve.nom }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if eleve.classe %}
+                                <a href="{% url 'detail_classe' eleve.classe.pk %}"
+                                   class="badge bg-primary text-decoration-none">
+                                    {{ eleve.classe }}
+                                </a>
+                            {% else %}
+                                <span class="badge bg-secondary">Non affecté</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ eleve.get_sexe_display }}</td>
+                        <td>
+                            {% if eleve.statut == 'nouveau' %}
+                                <span class="badge bg-success">Nouveau</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Redoublant</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ eleve.date_naissance|date:"d/m/Y" }}</td>
+                        <td class="text-end">
+                            <!-- Groupe de boutons d'action -->
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'detail_eleve' eleve.pk %}"
+                                   class="btn btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'modifier_eleve' eleve.pk %}"
+                                   class="btn btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'supprimer_eleve' eleve.pk %}"
+                                   class="btn btn-outline-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {# "empty" est exécuté si la liste 'eleves' est vide #}
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            Aucun élève trouvé.
+                            <a href="{% url 'ajouter_eleve' %}">Inscrire un élève</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

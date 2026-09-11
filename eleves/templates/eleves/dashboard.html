@@ -1,0 +1,272 @@
+<!-- ==========================================================================
+   DASHBOARD - Tableau de bord du Collège Lingolo
+   ===========================================================================
+   Cette page affiche les statistiques générales et les données récentes.
+
+   "extends" : hérite du template base.html (garde la navbar, le footer...)
+   "block content" : remplace le bloc "content" du template parent
+
+   Les variables entre doubles accolades viennent du dictionnaire 'context'
+   défini dans la vue dashboard() de views.py.
+   ==========================================================================-->
+
+{% extends 'eleves/base.html' %}
+
+{% block title %}Tableau de bord - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<!-- ===================================================================== -->
+<!-- EN-TÊTE DE LA PAGE                                                     -->
+<!-- ===================================================================== -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-speedometer2 me-2"></i>Tableau de bord
+    </h1>
+    <span class="text-muted">Vue d'ensemble du collège</span>
+</div>
+
+<!-- ===================================================================== -->
+<!-- CARTES DE STATISTIQUES                                                 -->
+<!-- ===================================================================== -->
+<!-- Grille Bootstrap : row > col = système de colonnes responsive          -->
+<!-- col-md-3 = 3/12 de la largeur sur écran moyen (4 cartes par ligne)    -->
+<!-- col-sm-6 = 6/12 sur petit écran (2 cartes par ligne)                  -->
+<div class="row g-3 mb-4">
+    <!-- g-3 = gap (espacement) entre les colonnes -->
+
+    <!-- Carte : Total élèves -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="display-6 text-primary mb-2">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h2 class="h1 mb-0">{{ total_eleves }}</h2>
+                <p class="text-muted mb-0">Élèves</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{% url 'liste_eleves' %}" class="text-decoration-none">
+                    Voir tout <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte : Total classes -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="display-6 text-success mb-2">
+                    <i class="bi bi-building"></i>
+                </div>
+                <h2 class="h1 mb-0">{{ total_classes }}</h2>
+                <p class="text-muted mb-0">Classes</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{% url 'liste_classes' %}" class="text-decoration-none">
+                    Voir tout <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte : Total professeurs -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="display-6 text-warning mb-2">
+                    <i class="bi bi-person-badge-fill"></i>
+                </div>
+                <h2 class="h1 mb-0">{{ total_professeurs }}</h2>
+                <p class="text-muted mb-0">Professeurs</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{% url 'liste_professeurs' %}" class="text-decoration-none">
+                    Voir tout <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte : Moyenne générale -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="display-6 text-info mb-2">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <h2 class="h1 mb-0">
+                    <!-- |floatformat:2 formate le nombre avec 2 décimales -->
+                    <!-- |default:"—" affiche "—" si la valeur est None -->
+                    {{ moyenne_generale|floatformat:2|default:"—" }}
+                </h2>
+                <p class="text-muted mb-0">Moyenne générale /20</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{% url 'liste_notes' %}" class="text-decoration-none">
+                    Voir les notes <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SECTION : EFFECTIFS PAR CLASSE + DERNIERS ÉLÈVES                      -->
+<!-- ===================================================================== -->
+<div class="row g-4 mb-4">
+
+    <!-- Colonne gauche : Effectifs par classe -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart me-2"></i>Effectifs par classe
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if classes_stats %}
+                    <!-- Barres de progression pour visualiser les effectifs -->
+                    {% for classe in classes_stats %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-semibold">{{ classe }}</span>
+                            <span class="badge bg-primary rounded-pill">
+                                {{ classe.nb_eleves }} / {{ classe.capacite }}
+                            </span>
+                        </div>
+                        <!-- Barre de progression -->
+                        <!-- Le style width est calculé en pourcentage -->
+                        {% with pct=classe.nb_eleves|divisibleby:1 %}
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary"
+                                 role="progressbar"
+                                 style="width: {% widthratio classe.nb_eleves classe.capacite 100 %}%">
+                                <!-- widthratio a b c = (a / b) * c -->
+                                <!-- Ici : (nb_eleves / capacite) * 100 = pourcentage -->
+                            </div>
+                        </div>
+                        {% endwith %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        Aucune classe enregistrée.
+                        <a href="{% url 'ajouter_classe' %}">Ajouter une classe</a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Colonne droite : Derniers élèves inscrits -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Dernières inscriptions
+                </h5>
+                <a href="{% url 'ajouter_eleve' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg"></i> Inscrire
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if derniers_eleves %}
+                    <!-- list-group : composant Bootstrap pour les listes -->
+                    <ul class="list-group list-group-flush">
+                        {% for eleve in derniers_eleves %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'detail_eleve' eleve.pk %}"
+                                   class="text-decoration-none fw-semibold">
+                                    {{ eleve.prenom }} {{ eleve.nom }}
+                                </a>
+                                <br>
+                                <small class="text-muted">
+                                    {{ eleve.classe|default:"Non affecté" }}
+                                </small>
+                            </div>
+                            <span class="badge bg-{{ eleve.statut|default:'secondary' }} rounded-pill">
+                                {% if eleve.statut == 'nouveau' %}
+                                    <span class="badge bg-success">Nouveau</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Redoublant</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        Aucun élève inscrit.
+                        <a href="{% url 'ajouter_eleve' %}">Inscrire un élève</a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SECTION : DERNIÈRES NOTES                                              -->
+<!-- ===================================================================== -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-journal-text me-2"></i>Dernières notes saisies
+        </h5>
+        <a href="{% url 'ajouter_note' %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg"></i> Saisir une note
+        </a>
+    </div>
+    <div class="card-body p-0">
+        {% if dernieres_notes %}
+        <!-- table-responsive : ajoute un scroll horizontal sur petit écran -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Élève</th>
+                        <th>Matière</th>
+                        <th>Note</th>
+                        <th>Trimestre</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# Boucle sur la liste des notes #}
+                    {% for note in dernieres_notes %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'detail_eleve' note.eleve.pk %}"
+                               class="text-decoration-none">
+                                {{ note.eleve }}
+                            </a>
+                        </td>
+                        <td>{{ note.matiere }}</td>
+                        <td>
+                            <!-- Coloration selon la note -->
+                            {% if note.valeur >= 10 %}
+                                <span class="badge bg-success">{{ note.valeur }}/20</span>
+                            {% elif note.valeur >= 7 %}
+                                <span class="badge bg-warning text-dark">{{ note.valeur }}/20</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ note.valeur }}/20</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ note.get_trimestre_display }}</td>
+                        <!-- |date:"d/m/Y" formate la date en français -->
+                        <td>{{ note.date_evaluation|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-muted text-center py-3">Aucune note saisie.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

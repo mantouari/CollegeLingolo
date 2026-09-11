@@ -1,0 +1,120 @@
+{% extends 'eleves/base.html' %}
+
+{% block title %}Notes - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-journal-bookmark me-2"></i>Notes</h1>
+    <a href="{% url 'ajouter_note' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Saisir une note
+    </a>
+</div>
+
+<!-- Filtres -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="eleve" class="form-label">Élève</label>
+                <select name="eleve" id="eleve" class="form-select">
+                    <option value="">Tous les élèves</option>
+                    {% for e in eleves %}
+                        <option value="{{ e.pk }}" {% if eleve_id == e.pk|stringformat:"i" %}selected{% endif %}>
+                            {{ e.prenom }} {{ e.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="matiere" class="form-label">Matière</label>
+                <select name="matiere" id="matiere" class="form-select">
+                    <option value="">Toutes les matières</option>
+                    {% for m in matieres %}
+                        <option value="{{ m.pk }}" {% if matiere_id == m.pk|stringformat:"i" %}selected{% endif %}>
+                            {{ m.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="trimestre" class="form-label">Trimestre</label>
+                <select name="trimestre" id="trimestre" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="1" {% if trimestre == "1" %}selected{% endif %}>1er Trimestre</option>
+                    <option value="2" {% if trimestre == "2" %}selected{% endif %}>2ème Trimestre</option>
+                    <option value="3" {% if trimestre == "3" %}selected{% endif %}>3ème Trimestre</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i>Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tableau des notes -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Élève</th>
+                        <th>Matière</th>
+                        <th>Note</th>
+                        <th>Trimestre</th>
+                        <th>Date</th>
+                        <th>Commentaire</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'detail_eleve' note.eleve.pk %}" class="text-decoration-none">
+                                {{ note.eleve }}
+                            </a>
+                        </td>
+                        <td>{{ note.matiere }}</td>
+                        <td>
+                            {% if note.valeur >= 10 %}
+                                <span class="badge bg-success">{{ note.valeur }}/20</span>
+                            {% elif note.valeur >= 7 %}
+                                <span class="badge bg-warning text-dark">{{ note.valeur }}/20</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ note.valeur }}/20</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ note.get_trimestre_display }}</td>
+                        <td>{{ note.date_evaluation|date:"d/m/Y" }}</td>
+                        <td>{{ note.commentaire|truncatechars:30 }}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'modifier_note' note.pk %}" class="btn btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'supprimer_note' note.pk %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            Aucune note. <a href="{% url 'ajouter_note' %}">Saisir une note</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

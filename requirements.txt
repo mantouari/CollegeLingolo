@@ -1,0 +1,11 @@
+# =============================================================================
+# DÉPENDANCES PYTHON - Collège Lingolo
+# =============================================================================
+# Ce fichier liste toutes les bibliothèques Python nécessaires au projet.
+# Pour les installer : pip install -r requirements.txt
+# =============================================================================
+
+Django>=5.0,<6.0          # Le framework web (version 5.x)
+gunicorn>=21.2.0          # Serveur WSGI pour la production (remplace le serveur de dev)
+whitenoise>=6.5.0         # Sert les fichiers statiques en production (CSS, JS, images)
+psycopg2-binary>=2.9.9    # Driver PostgreSQL pour Python (binary = pas besoin de compiler)

@@ -1,0 +1,66 @@
+{% extends 'eleves/base.html' %}
+
+{% block title %}Professeurs - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-person-badge me-2"></i>Professeurs</h1>
+    <a href="{% url 'ajouter_professeur' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Ajouter un professeur
+    </a>
+</div>
+
+<div class="row g-3">
+    {% for prof in professeurs %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                         style="width: 48px; height: 48px; font-size: 1.2rem;">
+                        {{ prof.prenom.0 }}{{ prof.nom.0 }}
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="mb-0">{{ prof.prenom }} {{ prof.nom }}</h6>
+                        <small class="text-muted">{{ prof.specialite|default:"Spécialité non définie" }}</small>
+                    </div>
+                </div>
+                {% if prof.telephone %}
+                    <p class="mb-1"><i class="bi bi-telephone me-2 text-muted"></i>{{ prof.telephone }}</p>
+                {% endif %}
+                {% if prof.email %}
+                    <p class="mb-1"><i class="bi bi-envelope me-2 text-muted"></i>{{ prof.email }}</p>
+                {% endif %}
+                <div class="mt-2">
+                    {% for matiere in prof.matieres.all %}
+                        <span class="badge bg-info me-1">{{ matiere.nom }}</span>
+                    {% empty %}
+                        <span class="text-muted small">Aucune matière assignée</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent text-end">
+                <div class="btn-group btn-group-sm">
+                    <a href="{% url 'detail_professeur' prof.pk %}" class="btn btn-outline-info">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'modifier_professeur' prof.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'supprimer_professeur' prof.pk %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="bi bi-inbox display-4 d-block mb-2"></i>
+        Aucun professeur. <a href="{% url 'ajouter_professeur' %}">Ajouter un professeur</a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,19 @@
+# =============================================================================
+# .dockerignore - Fichiers exclus de l'image Docker
+# =============================================================================
+# Comme .gitignore, mais pour Docker.
+# Ces fichiers ne seront PAS copiés dans l'image (COPY . .)
+# Cela réduit la taille de l'image et accélère le build.
+# =============================================================================
+
+__pycache__
+*.pyc
+*.pyo
+db.sqlite3
+.git
+.gitignore
+.env
+*.md
+.vscode
+.idea
+staticfiles/
