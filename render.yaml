@@ -12,7 +12,7 @@
 databases:
   - name: college-lingolo-db
     plan: free
-    databaseName: college_lingolo
+    databaseName: college_lingolo_db
     user: college_admin
 
 services:

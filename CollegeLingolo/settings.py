@@ -125,7 +125,12 @@ WSGI_APPLICATION = 'CollegeLingolo.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',   # Le driver PostgreSQL
-        'NAME': BASE_DIR / 'db.sqlite3',       # Nom de la base
+        'NAME': BASE_DIR / 'db.sqlite3',       # Nom de la base 
+        'Hostname' : 'dpg-dail49h594qs7396vh00-a.frankfurt-postgres.render.com',
+        'Port' : '5432',
+        'Database' : 'college_lingolo_db',
+        'Username' : 'college_lingolo_db_user',
+        'Password' : '8GMBmMQCWdgWYhODBpidYkjrIwZ24ZY3' 
     }
 }
 

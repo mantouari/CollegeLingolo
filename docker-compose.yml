@@ -30,7 +30,7 @@ services:
     # Variables d'environnement pour configurer PostgreSQL au premier lancement
     # Ces valeurs sont lues par settings.py via os.environ.get()
     environment:
-      POSTGRES_DB: CollegeLingolo        # Nom de la base de données à créer
+      POSTGRES_DB: collegelingolo        # Nom de la base de données à créer
       POSTGRES_USER: college_admin        # Nom de l'utilisateur PostgreSQL
       POSTGRES_PASSWORD: college2026      # Mot de passe (à changer en prod !)
 
@@ -80,7 +80,7 @@ services:
       - DJANGO_DEBUG=True
       - DJANGO_SECRET_KEY=cle-secrete-docker-local-dev-seulement
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-      - POSTGRES_DB=CollegeLingolo
+      - POSTGRES_DB=collegelingolo
       - POSTGRES_USER=college_admin
       - POSTGRES_PASSWORD=college2026
       - POSTGRES_HOST=db
