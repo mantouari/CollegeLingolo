@@ -509,3 +509,75 @@ def supprimer_note(request, pk):
         'type_objet': 'note',
         'url_retour': 'liste_notes',
     })
+
+# =============================================================================
+# VUES MATIÈRES
+# =============================================================================
+
+@login_required
+def liste_matieres(request):
+    """Liste toutes les matières avec leurs professeurs."""
+    matieres = Matiere.objects.prefetch_related('professeurs')
+    return render(request, 'eleves/liste_matieres.html', {
+        'matieres': matieres,
+    })
+
+
+@login_required
+def detail_matiere(request, pk):
+    """Détail d'une matière avec ses professeurs."""
+    matiere = get_object_or_404(Matiere, pk=pk)
+    return render(request, 'eleves/detail_matiere.html', {
+        'matiere': matiere,
+    })
+
+
+@login_required
+def ajouter_matiere(request):
+    """Formulaire d'ajout d'une matière."""
+    if request.method == 'POST':
+        form = MatiereForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('liste_matieres')
+    else:
+        form = MatiereForm()
+
+    return render(request, 'eleves/formulaire_matiere.html', {
+        'form': form,
+        'titre': 'Ajouter une matière',
+        'bouton': 'Ajouter',
+    })
+
+
+@login_required
+def modifier_matiere(request, pk):
+    """Modification d'une matière existante."""
+    matiere = get_object_or_404(Matiere, pk=pk)
+    if request.method == 'POST':
+        form = MatiereForm(request.POST, instance=matiere)
+        if form.is_valid():
+            form.save()
+            return redirect('liste_matieres')
+    else:
+        form = MatiereForm(instance=matiere)
+
+    return render(request, 'eleves/formulaire_matiere.html', {
+        'form': form,
+        'titre': f'Modifier {matiere}',
+        'bouton': 'Enregistrer',
+    })
+
+
+@login_required
+def supprimer_matiere(request, pk):
+    """Suppression d'une matière après confirmation."""
+    matiere = get_object_or_404(Matiere, pk=pk)
+    if request.method == 'POST':
+        matiere.delete()
+        return redirect('liste_matieres')
+    return render(request, 'eleves/confirmer_suppression.html', {
+        'objet': matiere,
+        'type_objet': 'matière',
+        'url_retour': 'liste_matieres',
+    })

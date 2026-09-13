@@ -1,0 +1,29 @@
+{% extends 'eleves/base.html' %}
+
+{% block title %}{{ matiere.nom }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3> {{ matiere.nom }}</h3>
+    </div>
+    <div class="card-body">
+        <p><strong>Coefficient :</strong> {{ matiere.coefficient }}</p>
+        
+        <h5 class="mt-4">Professeurs assignés :</h5>
+        <ul>
+            {% for prof in matiere.professeurs.all %}
+                <li><a href="{% url 'detail_professeur' prof.pk %}">{{ prof }}</a></li>
+            {% empty %}
+                <li class="text-muted">Aucun professeur assigné</li>
+            {% endfor %}
+        </ul>
+        
+        <div class="mt-4">
+            <a href="{% url 'modifier_matiere' matiere.pk %}" class="btn btn-warning"> Modifier</a>
+            <a href="{% url 'supprimer_matiere' matiere.pk %}" class="btn btn-danger"> Supprimer</a>
+            <a href="{% url 'liste_matieres' %}" class="btn btn-secondary"> Retour</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
