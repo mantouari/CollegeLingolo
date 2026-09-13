@@ -15,7 +15,7 @@ L'attribut 'widgets' permet de personnaliser l'apparence HTML des champs
 (ajouter des classes CSS, changer le type d'input, etc.)
 =============================================================================
 """
-
+'''from django.contrib import admin
 from django import forms
 from .models import Eleve, Classe, Professeur, Matiere, Note
 
@@ -43,8 +43,8 @@ class ClasseForm(forms.ModelForm):
             'capacite': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
-
-class EleveForm(forms.ModelForm):
+@admin.register(Eleve)
+class EleveForm(forms.BaseModelForm):
     """
     Formulaire pour créer/modifier un Élève.
 
@@ -94,7 +94,7 @@ class EleveForm(forms.ModelForm):
             }),
         }
 
-
+@admin.register(Professeur)
 class ProfesseurForm(forms.ModelForm):
     """Formulaire pour créer/modifier un Professeur."""
 
@@ -119,7 +119,7 @@ class ProfesseurForm(forms.ModelForm):
             }),
         }
 
-
+@admin.register(Matiere)
 class MatiereForm(forms.ModelForm):
     """Formulaire pour créer/modifier une Matière."""
 
@@ -139,7 +139,7 @@ class MatiereForm(forms.ModelForm):
             }),
         }
 
-
+@admin.register(Note)
 class NoteForm(forms.ModelForm):
     """
     Formulaire pour saisir une Note.
@@ -188,5 +188,113 @@ class NoteForm(forms.ModelForm):
                 raise forms.ValidationError(
                     "La note doit être comprise entre 0 et 20."
                 )
-        return valeur
+        return valeur'''
+
+from django.contrib import admin
+from .models import Classe, Eleve, Professeur, Matiere, Note
+
+
+# =============================================================================
+# ADMIN CLASSE
+# =============================================================================
+
+@admin.register(Classe)
+class ClasseAdmin(admin.ModelAdmin):
+    """Configuration de l'admin pour le modèle Classe."""
+    
+    list_display = ('__str__', 'niveau', 'lettre', 'capacite', 'nombre_eleves')
+    list_filter = ('niveau',)
+    search_fields = ('niveau', 'lettre')
+    ordering = ('niveau', 'lettre')
+    
+    def nombre_eleves(self, obj):
+        """Affiche le nombre d'élèves dans la classe."""
+        return obj.eleves.count()
+    nombre_eleves.short_description = 'Nombre d\'élèves'
+
+
+# =============================================================================
+# ADMIN ÉLÈVE
+# =============================================================================
+
+@admin.register(Eleve)
+class EleveAdmin(admin.ModelAdmin):
+    """Configuration de l'admin pour le modèle Élève."""
+    
+    list_display = ('nom', 'prenom', 'classe', 'sexe', 'statut', 'date_inscription')
+    list_filter = ('classe', 'sexe', 'statut', 'date_inscription')
+    search_fields = ('nom', 'prenom', 'nom_parent')
+    date_hierarchy = 'date_inscription'
+    ordering = ('classe', 'nom', 'prenom')
+    
+    fieldsets = (
+        ('Informations personnelles', {
+            'fields': ('nom', 'prenom', 'date_naissance', 'sexe')
+        }),
+        ('Scolarité', {
+            'fields': ('classe', 'statut')
+        }),
+        ('Coordonnées', {
+            'fields': ('adresse', 'nom_parent', 'telephone_parent'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+# =============================================================================
+# ADMIN PROFESSEUR
+# =============================================================================
+
+@admin.register(Professeur)
+class ProfesseurAdmin(admin.ModelAdmin):
+    """Configuration de l'admin pour le modèle Professeur."""
+    
+    list_display = ('nom', 'prenom', 'specialite', 'telephone', 'email')
+    search_fields = ('nom', 'prenom', 'specialite')
+    list_filter = ('specialite',)
+    ordering = ('nom', 'prenom')
+
+
+# =============================================================================
+# ADMIN MATIÈRE
+# =============================================================================
+
+@admin.register(Matiere)
+class MatiereAdmin(admin.ModelAdmin):
+    """Configuration de l'admin pour le modèle Matière."""
+    
+    list_display = ('nom', 'coefficient', 'liste_professeurs')
+    search_fields = ('nom',)
+    list_filter = ('coefficient',)
+    filter_horizontal = ('professeurs',)
+    ordering = ('nom',)
+    
+    def liste_professeurs(self, obj):
+        """Affiche la liste des professeurs de la matière."""
+        return ", ".join([str(p) for p in obj.professeurs.all()]) or "Aucun"
+    liste_professeurs.short_description = 'Professeurs'
+
+
+# =============================================================================
+# ADMIN NOTE
+# =============================================================================
+
+@admin.register(Note)
+class NoteAdmin(admin.ModelAdmin):
+    """Configuration de l'admin pour le modèle Note."""
+    
+    list_display = ('eleve', 'matiere', 'valeur', 'trimestre', 'date_evaluation')
+    list_filter = ('trimestre', 'matiere', 'date_evaluation')
+    search_fields = ('eleve__nom', 'eleve__prenom', 'matiere__nom')
+    date_hierarchy = 'date_evaluation'
+    ordering = ('-date_evaluation',)
+    
+    fieldsets = (
+        ('Évaluation', {
+            'fields': ('eleve', 'matiere', 'valeur', 'trimestre')
+        }),
+        ('Détails', {
+            'fields': ('date_evaluation', 'commentaire')
+        }),
+    )
 
