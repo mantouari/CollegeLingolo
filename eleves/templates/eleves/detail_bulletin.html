@@ -1,0 +1,95 @@
+{% extends 'eleves/base.html' %}
+
+{% block title %}Bulletin de {{ bulletin.eleve }} - Collège Lingolo{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-file-earmark-text me-2"></i>Bulletin scolaire
+    </h1>
+    <div>
+        <a href="{% url 'telecharger_bulletin' bulletin.pk %}" class="btn btn-primary">
+            <i class="bi bi-download"></i> Télécharger le PDF
+        </a>
+        <a href="{% url 'detail_eleve' bulletin.eleve.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<!-- Informations générales -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted d-block">Élève</small>
+                <strong>{{ bulletin.eleve }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Classe</small>
+                <strong>{{ bulletin.classe|default:"—" }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Trimestre</small>
+                <strong>{{ bulletin.get_trimestre_display }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Date de génération</small>
+                <strong>{{ bulletin.date_bulletin|date:"d/m/Y" }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des notes -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0">
+        <h5 class="mb-0">Détail des notes</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Matière</th>
+                        <th>Coefficient</th>
+                        <th>Note / 20</th>
+                        <th>Appréciation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in notes_avec_appreciation %}
+                    <tr>
+                        <td>{{ item.note.matiere }}</td>
+                        <td>{{ item.note.matiere.coefficient }}</td>
+                        <td>
+                            {% if item.note.valeur >= 10 %}
+                                <span class="badge bg-success">{{ item.note.valeur }}</span>
+                            {% elif item.note.valeur >= 7 %}
+                                <span class="badge bg-warning text-dark">{{ item.note.valeur }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ item.note.valeur }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.appreciation }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light fw-bold">
+                    <tr>
+                        <td colspan="2">MOYENNE GÉNÉRALE</td>
+                        <td colspan="2">{{ bulletin.moyenne_generale }}/20</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Appréciation générale -->
+<div class="alert alert-info">
+    <strong>Appréciation générale :</strong> <em>{{ bulletin.appreciation_generale }}</em>
+</div>
+
+{% endblock %}

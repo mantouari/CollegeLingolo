@@ -191,7 +191,7 @@ class NoteForm(forms.ModelForm):
         return valeur'''
 
 from django.contrib import admin
-from .models import Classe, Eleve, Professeur, Matiere, Note
+from .models import Classe, Eleve, Professeur, Matiere, Note, Bulletin
 
 
 # =============================================================================
@@ -298,3 +298,32 @@ class NoteAdmin(admin.ModelAdmin):
         }),
     )
 
+# =============================================================================
+# ADMIN BULLETIN
+# =============================================================================
+@admin.register(Bulletin)
+class BulletinAdmin(admin.ModelAdmin):
+    """
+    Interface d'administration du Bulletin.
+
+    L'action "Générer / régénérer le PDF" permet de créer le PDF
+    directement depuis la liste, sans passer par le site public.
+    """
+    list_display = [
+        'eleve', 'classe', 'trimestre',
+        'moyenne_generale', 'appreciation_generale', 'date_bulletin'
+    ]
+    list_filter = ['trimestre', 'classe']
+    search_fields = ['eleve__nom', 'eleve__prenom']
+    readonly_fields = [
+        'date_bulletin', 'moyenne_generale', 'appreciation_generale'
+    ]
+    actions = ['action_generer_pdf']
+
+    @admin.action(description="Générer / régénérer le PDF des bulletins sélectionnés")
+    def action_generer_pdf(self, request, queryset):
+        count = 0
+        for bulletin in queryset:
+            bulletin.generer_pdf()
+            count += 1
+        self.message_user(request, f"{count} bulletin(s) généré(s) avec succès.")

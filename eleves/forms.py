@@ -17,7 +17,7 @@ L'attribut 'widgets' permet de personnaliser l'apparence HTML des champs
 """
 
 from django import forms
-from .models import Eleve, Classe, Professeur, Matiere, Note
+from .models import Eleve, Classe, Professeur, Matiere, Note, Bulletin
 
 
 class ClasseForm(forms.ModelForm):
@@ -189,3 +189,74 @@ class NoteForm(forms.ModelForm):
                     "La note doit être comprise entre 0 et 20."
                 )
         return valeur
+
+class BulletinForm(forms.ModelForm):
+    """
+    Formulaire pour créer/modifier un Bulletin.
+
+    Seuls les champs 'eleve', 'classe' et 'trimestre' sont saisis
+    manuellement. Les autres champs du modèle (moyenne_generale,
+    appreciation_generale, fichier_pdf, date_bulletin) sont calculés
+    automatiquement par les méthodes du modèle (calculer_moyenne(),
+    generer_appreciation_generale(), generer_pdf()) et ne doivent
+    donc pas apparaître dans le formulaire de saisie.
+
+    La validation personnalisée clean() vérifie que :
+    - l'élève a au moins une note pour le trimestre choisi
+    - il n'existe pas déjà un bulletin pour ce couple élève/trimestre
+      (sécurité supplémentaire en plus de unique_together dans le modèle)
+    """
+
+    class Meta:
+        model = Bulletin
+        fields = ['eleve', 'classe', 'trimestre']
+        widgets = {
+            'eleve': forms.Select(attrs={'class': 'form-select'}),
+            'classe': forms.Select(attrs={'class': 'form-select'}),
+            'trimestre': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        """
+        Pré-remplit automatiquement le champ 'classe' avec la classe
+        actuelle de l'élève sélectionné, pour éviter les erreurs de saisie.
+        """
+        super().__init__(*args, **kwargs)
+        # Si on modifie un bulletin existant, on pré-sélectionne
+        # la classe de l'élève associé
+        if self.instance and self.instance.pk and self.instance.eleve:
+            self.fields['classe'].initial = self.instance.eleve.classe
+
+    def clean(self):
+        """
+        Validation globale du formulaire (porte sur plusieurs champs
+        à la fois, contrairement à clean_<champ>() qui ne porte
+        que sur un seul champ).
+        """
+        cleaned_data = super().clean()
+        eleve = cleaned_data.get('eleve')
+        trimestre = cleaned_data.get('trimestre')
+
+        if eleve and trimestre:
+            # Vérifie que l'élève a au moins une note pour ce trimestre
+            if not eleve.notes.filter(trimestre=trimestre).exists():
+                raise forms.ValidationError(
+                    f"{eleve} n'a aucune note enregistrée pour le "
+                    f"trimestre {trimestre}. Impossible de générer un bulletin."
+                )
+
+            # Vérifie qu'il n'existe pas déjà un bulletin pour ce couple
+            # élève/trimestre (sauf si on modifie ce bulletin lui-même)
+            bulletin_existant = Bulletin.objects.filter(
+                eleve=eleve, trimestre=trimestre
+            )
+            if self.instance and self.instance.pk:
+                bulletin_existant = bulletin_existant.exclude(pk=self.instance.pk)
+
+            if bulletin_existant.exists():
+                raise forms.ValidationError(
+                    f"Un bulletin existe déjà pour {eleve} au "
+                    f"trimestre {trimestre}."
+                )
+
+        return cleaned_data

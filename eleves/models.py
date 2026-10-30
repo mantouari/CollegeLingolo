@@ -362,3 +362,258 @@ class Note(models.Model):
 
     def __str__(self):
         return f"{self.eleve} - {self.matiere} : {self.valeur}/20"
+
+
+# =============================================================================
+# MODÈLE BULLETIN
+# =============================================================================
+# Représente le bulletin scolaire trimestriel d'un élève.
+# Il agrège les notes de l'élève pour un trimestre donné, calcule sa
+# moyenne générale, génère une appréciation automatique et peut produire
+# un fichier PDF téléchargeable.
+
+class Bulletin(models.Model):
+    """
+    Bulletin scolaire d'un élève pour un trimestre donné.
+
+    ForeignKey vers Eleve : un élève peut avoir plusieurs bulletins
+    (un par trimestre), mais un bulletin appartient à un seul élève.
+    """
+
+    # -------------------------------------------------------------------------
+    # CHAMPS
+    # -------------------------------------------------------------------------
+    eleve = models.ForeignKey(
+        Eleve,
+        on_delete=models.CASCADE,        # Si l'élève est supprimé, ses bulletins aussi
+        related_name='bulletins',        # eleve.bulletins.all()
+        verbose_name="Élève"
+    )
+
+    classe = models.ForeignKey(
+        Classe,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bulletins',
+        verbose_name="Classe"
+    )
+
+    trimestre = models.IntegerField(
+        choices=Note.TRIMESTRES,         # On réutilise les choix définis dans Note
+        default=1,
+        verbose_name="Trimestre"
+    )
+
+    date_bulletin = models.DateField(
+        auto_now_add=True,
+        verbose_name="Date de génération"
+    )
+
+    moyenne_generale = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Moyenne générale"
+    )
+
+    appreciation_generale = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        verbose_name="Appréciation générale"
+    )
+
+    # FileField : stocke le PDF généré dans MEDIA_ROOT/bulletins/
+    fichier_pdf = models.FileField(
+        upload_to='bulletins/',
+        blank=True,
+        null=True,
+        verbose_name="Fichier PDF"
+    )
+
+    class Meta:
+        verbose_name = "Bulletin"
+        verbose_name_plural = "Bulletins"
+        ordering = ['-date_bulletin']
+        # Un seul bulletin par élève et par trimestre
+        unique_together = ['eleve', 'trimestre']
+
+    def __str__(self):
+        return f"Bulletin de {self.eleve} - {self.get_trimestre_display()}"
+
+    def get_absolute_url(self):
+        return reverse('detail_bulletin', kwargs={'pk': self.pk})
+
+    # -------------------------------------------------------------------------
+    # MÉTHODES MÉTIER
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def generer_appreciation(note):
+        """
+        Génère une appréciation textuelle à partir d'une note sur 20.
+
+        Args:
+            note (float/Decimal): la note à évaluer
+
+        Returns:
+            str: l'appréciation correspondante
+        """
+        if note >= 18:
+            return "Excellent"
+        elif note >= 16:
+            return "Très bien"
+        elif note >= 14:
+            return "Bien"
+        elif note >= 12:
+            return "Satisfaisant"
+        elif note >= 10:
+            return "Passable"
+        elif note >= 8:
+            return "Faible"
+        else:
+            return "Très faible"
+
+    def calculer_moyenne(self):
+        """
+        Calcule la moyenne générale du bulletin à partir des notes
+        de l'élève pour ce trimestre, puis l'enregistre sur l'instance.
+        """
+        notes = self.eleve.notes.filter(trimestre=self.trimestre)
+        if not notes.exists():
+            self.moyenne_generale = 0
+            return 0
+
+        total = sum(n.valeur for n in notes)
+        moyenne = total / notes.count()
+        self.moyenne_generale = round(moyenne, 2)
+        return self.moyenne_generale
+
+    def generer_appreciation_generale(self):
+        """
+        Génère l'appréciation générale du bulletin à partir de la moyenne,
+        puis l'enregistre sur l'instance.
+        """
+        moyenne = self.moyenne_generale
+        if moyenne is None:
+            moyenne = self.calculer_moyenne()
+
+        if moyenne >= 16:
+            appreciation = "Excellent travail ! Continuez ainsi."
+        elif moyenne >= 14:
+            appreciation = "Très bon résultat. Bravo !"
+        elif moyenne >= 12:
+            appreciation = "Bons résultats. À maintenir."
+        elif moyenne >= 10:
+            appreciation = "Résultats satisfaisants."
+        else:
+            appreciation = "À améliorer. Des efforts supplémentaires sont nécessaires."
+
+        self.appreciation_generale = appreciation
+        return appreciation
+
+    def generer_pdf(self, save=True):
+        """
+        Génère le bulletin au format PDF (via reportlab) et l'enregistre
+        dans le champ fichier_pdf.
+
+        Args:
+            save (bool): si True, sauvegarde l'instance en base après génération
+        """
+        from io import BytesIO
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import cm
+        from reportlab.lib import colors
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        )
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from django.core.files.base import ContentFile
+
+        # Mise à jour des valeurs calculées
+        self.calculer_moyenne()
+        self.generer_appreciation_generale()
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer, pagesize=A4, topMargin=2 * cm, bottomMargin=2 * cm
+        )
+        story = []
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#1f4788'),
+            spaceAfter=20,
+            alignment=1
+        )
+        story.append(Paragraph("BULLETIN SCOLAIRE", title_style))
+        story.append(Spacer(1, 0.5 * cm))
+
+        info_style = ParagraphStyle(
+            'Info', parent=styles['Normal'], fontSize=11, spaceAfter=10
+        )
+        story.append(Paragraph(f"<b>Élève :</b> {self.eleve}", info_style))
+        story.append(Paragraph(f"<b>Classe :</b> {self.classe}", info_style))
+        story.append(
+            Paragraph(f"<b>Trimestre :</b> {self.get_trimestre_display()}", info_style)
+        )
+        story.append(
+            Paragraph(
+                f"<b>Date :</b> {self.date_bulletin.strftime('%d/%m/%Y')}",
+                info_style
+            )
+        )
+        story.append(Spacer(1, 0.8 * cm))
+
+        # Tableau des notes
+        notes = self.eleve.notes.filter(trimestre=self.trimestre)
+        data = [["Matières", "Notes / 20", "Appréciations"]]
+        for note in notes:
+            appreciation = self.generer_appreciation(note.valeur)
+            data.append([note.matiere.nom, str(note.valeur), appreciation])
+
+        data.append(["MOYENNE", f"{self.moyenne_generale:.2f}", "---"])
+
+        t = Table(data, colWidths=[6 * cm, 3 * cm, 5 * cm])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f4788')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e6e6e6')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#f0f0f0')]),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 1 * cm))
+
+        appreciation_style = ParagraphStyle(
+            'Appreciation',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor=colors.HexColor("#ff0000"),
+            spaceAfter=10
+        )
+        story.append(
+            Paragraph(
+                f"<b>Appréciation générale :</b> <i>{self.appreciation_generale}</i>",
+                appreciation_style
+            )
+        )
+
+        doc.build(story)
+        buffer.seek(0)
+
+        nom_fichier = f"bulletin_{self.eleve.nom}_{self.eleve.prenom}_T{self.trimestre}.pdf"
+        self.fichier_pdf.save(nom_fichier, ContentFile(buffer.read()), save=False)
+
+        if save:
+            self.save()
+ 

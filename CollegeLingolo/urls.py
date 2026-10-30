@@ -13,6 +13,8 @@ concernent le projet entier, pas juste l'application "eleves".
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from django.conf import settings
+from django.conf.urls.static import static
 # auth_views : vues d'authentification fournies par Django.
 # LoginView et LogoutView gèrent tout automatiquement :
 # - Afficher le formulaire de connexion
@@ -46,3 +48,6 @@ urlpatterns = [
     # donc la page d'accueil '/' affiche directement le tableau de bord
     path('', include('eleves.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

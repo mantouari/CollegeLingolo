@@ -29,14 +29,12 @@
 <!-- ===================================================================== -->
 <!-- CARTES DE STATISTIQUES                                                 -->
 <!-- ===================================================================== -->
-<!-- Grille Bootstrap : row > col = système de colonnes responsive          -->
-<!-- col-md-3 = 3/12 de la largeur sur écran moyen (4 cartes par ligne)    -->
-<!-- col-sm-6 = 6/12 sur petit écran (2 cartes par ligne)                  -->
-<div class="row g-3 mb-4">
-    <!-- g-3 = gap (espacement) entre les colonnes -->
+<!-- row-cols-* : nombre de cartes par ligne selon la taille d'écran        -->
+<!-- 1 carte sur mobile, 2 sur petit écran, 3 sur moyen, 5 sur grand écran  -->
+<div class="row g-3 mb-4 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-5">
 
     <!-- Carte : Total élèves -->
-    <div class="col-sm-6 col-md-3">
+    <div class="col">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body text-center">
                 <div class="display-6 text-primary mb-2">
@@ -54,7 +52,7 @@
     </div>
 
     <!-- Carte : Total classes -->
-    <div class="col-sm-6 col-md-3">
+    <div class="col">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body text-center">
                 <div class="display-6 text-success mb-2">
@@ -72,7 +70,7 @@
     </div>
 
     <!-- Carte : Total professeurs -->
-    <div class="col-sm-6 col-md-3">
+    <div class="col">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body text-center">
                 <div class="display-6 text-warning mb-2">
@@ -90,15 +88,13 @@
     </div>
 
     <!-- Carte : Moyenne générale -->
-    <div class="col-sm-6 col-md-3">
+    <div class="col">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body text-center">
                 <div class="display-6 text-info mb-2">
                     <i class="bi bi-graph-up"></i>
                 </div>
                 <h2 class="h1 mb-0">
-                    <!-- |floatformat:2 formate le nombre avec 2 décimales -->
-                    <!-- |default:"—" affiche "—" si la valeur est None -->
                     {{ moyenne_generale|floatformat:2|default:"—" }}
                 </h2>
                 <p class="text-muted mb-0">Moyenne générale /20</p>
@@ -110,6 +106,25 @@
             </div>
         </div>
     </div>
+
+    <!-- Carte : Total bulletins -->
+    <div class="col">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="display-6 text-danger mb-2">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                </div>
+                <h2 class="h1 mb-0">{{ total_bulletins }}</h2>
+                <p class="text-muted mb-0">Bulletins générés</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <span class="text-muted small">
+                    <i class="bi bi-info-circle"></i> Voir ci-dessous
+                </span>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- ===================================================================== -->
@@ -127,7 +142,6 @@
             </div>
             <div class="card-body">
                 {% if classes_stats %}
-                    <!-- Barres de progression pour visualiser les effectifs -->
                     {% for classe in classes_stats %}
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-1">
@@ -136,18 +150,12 @@
                                 {{ classe.nb_eleves }} / {{ classe.capacite }}
                             </span>
                         </div>
-                        <!-- Barre de progression -->
-                        <!-- Le style width est calculé en pourcentage -->
-                        {% with pct=classe.nb_eleves|divisibleby:1 %}
                         <div class="progress" style="height: 8px;">
                             <div class="progress-bar bg-primary"
                                  role="progressbar"
                                  style="width: {% widthratio classe.nb_eleves classe.capacite 100 %}%">
-                                <!-- widthratio a b c = (a / b) * c -->
-                                <!-- Ici : (nb_eleves / capacite) * 100 = pourcentage -->
                             </div>
                         </div>
-                        {% endwith %}
                     </div>
                     {% endfor %}
                 {% else %}
@@ -173,7 +181,6 @@
             </div>
             <div class="card-body p-0">
                 {% if derniers_eleves %}
-                    <!-- list-group : composant Bootstrap pour les listes -->
                     <ul class="list-group list-group-flush">
                         {% for eleve in derniers_eleves %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -211,7 +218,7 @@
 <!-- ===================================================================== -->
 <!-- SECTION : DERNIÈRES NOTES                                              -->
 <!-- ===================================================================== -->
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
             <i class="bi bi-journal-text me-2"></i>Dernières notes saisies
@@ -222,7 +229,6 @@
     </div>
     <div class="card-body p-0">
         {% if dernieres_notes %}
-        <!-- table-responsive : ajoute un scroll horizontal sur petit écran -->
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
@@ -235,7 +241,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {# Boucle sur la liste des notes #}
                     {% for note in dernieres_notes %}
                     <tr>
                         <td>
@@ -246,7 +251,6 @@
                         </td>
                         <td>{{ note.matiere }}</td>
                         <td>
-                            <!-- Coloration selon la note -->
                             {% if note.valeur >= 10 %}
                                 <span class="badge bg-success">{{ note.valeur }}/20</span>
                             {% elif note.valeur >= 7 %}
@@ -256,7 +260,6 @@
                             {% endif %}
                         </td>
                         <td>{{ note.get_trimestre_display }}</td>
-                        <!-- |date:"d/m/Y" formate la date en français -->
                         <td>{{ note.date_evaluation|date:"d/m/Y" }}</td>
                     </tr>
                     {% endfor %}
@@ -265,6 +268,73 @@
         </div>
         {% else %}
             <p class="text-muted text-center py-3">Aucune note saisie.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SECTION : DERNIERS BULLETINS GÉNÉRÉS                                   -->
+<!-- ===================================================================== -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-file-earmark-text me-2"></i>Derniers bulletins générés
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        {% if derniers_bulletins %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Élève</th>
+                        <th>Classe</th>
+                        <th>Trimestre</th>
+                        <th>Moyenne</th>
+                        <th>Appréciation</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bulletin in derniers_bulletins %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'detail_eleve' bulletin.eleve.pk %}"
+                               class="text-decoration-none">
+                                {{ bulletin.eleve }}
+                            </a>
+                        </td>
+                        <td>{{ bulletin.classe|default:"—" }}</td>
+                        <td>{{ bulletin.get_trimestre_display }}</td>
+                        <td>
+                            {% if bulletin.moyenne_generale >= 10 %}
+                                <span class="badge bg-success">{{ bulletin.moyenne_generale }}/20</span>
+                            {% elif bulletin.moyenne_generale >= 7 %}
+                                <span class="badge bg-warning text-dark">{{ bulletin.moyenne_generale }}/20</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ bulletin.moyenne_generale }}/20</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ bulletin.appreciation_generale }}</small></td>
+                        <td>{{ bulletin.date_bulletin|date:"d/m/Y" }}</td>
+                        <td>
+                            <a href="{% url 'detail_bulletin' bulletin.pk %}"
+                               class="btn btn-sm btn-outline-primary" title="Voir le détail">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'telecharger_bulletin' bulletin.pk %}"
+                               class="btn btn-sm btn-outline-secondary" title="Télécharger le PDF">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-muted text-center py-3">Aucun bulletin généré pour le moment.</p>
         {% endif %}
     </div>
 </div>

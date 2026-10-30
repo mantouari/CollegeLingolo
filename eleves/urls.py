@@ -58,6 +58,15 @@ urlpatterns = [
     path('professeurs/<int:pk>/supprimer/', views.supprimer_professeur, name='supprimer_professeur'),
 
     # -------------------------------------------------------------------------
+    # URLs Matières
+    # -------------------------------------------------------------------------
+    path('matieres/', views.liste_matieres, name='liste_matieres'),
+    path('matieres/<int:pk>/', views.detail_matiere, name='detail_matiere'),
+    path('matieres/ajouter/', views.ajouter_matiere, name='ajouter_matiere'),
+    path('matieres/<int:pk>/modifier/', views.modifier_matiere, name='modifier_matiere'),
+    path('matieres/<int:pk>/supprimer/', views.supprimer_matiere, name='supprimer_matiere'),
+
+    # -------------------------------------------------------------------------
     # URLs Notes
     # -------------------------------------------------------------------------
     path('notes/', views.liste_notes, name='liste_notes'),
@@ -65,15 +74,38 @@ urlpatterns = [
     path('notes/<int:pk>/modifier/', views.modifier_note, name='modifier_note'),
     path('notes/<int:pk>/supprimer/', views.supprimer_note, name='supprimer_note'),
 
-
-# Ajoutez ces lignes dans votre urlpatterns, après les URLs Professeurs :
-
-# -------------------------------------------------------------------------
-# URLs Matières
-# -------------------------------------------------------------------------
-path('matieres/', views.liste_matieres, name='liste_matieres'),
-path('matieres/<int:pk>/', views.detail_matiere, name='detail_matiere'),
-path('matieres/ajouter/', views.ajouter_matiere, name='ajouter_matiere'),
-path('matieres/<int:pk>/modifier/', views.modifier_matiere, name='modifier_matiere'),
-path('matieres/<int:pk>/supprimer/', views.supprimer_matiere, name='supprimer_matiere'),
+    # -------------------------------------------------------------------------
+    # URLs Bulletins
+    # -------------------------------------------------------------------------
+    path('bulletins/ajouter/', views.ajouter_bulletin, name='ajouter_bulletin'),
+    path(
+        'eleves/<int:eleve_pk>/bulletins/',
+        views.liste_bulletins_eleve,
+        name='liste_bulletins_eleve'
+    ),
+    path(
+        'eleves/<int:eleve_pk>/bulletins/generer/<int:trimestre>/',
+        views.generer_bulletin,
+        name='generer_bulletin'
+    ),
+    path(
+        'bulletins/<int:pk>/',
+        views.detail_bulletin,
+        name='detail_bulletin'
+    ),
+    path(
+        'bulletins/<int:pk>/telecharger/',
+        views.telecharger_bulletin,
+        name='telecharger_bulletin'
+    ),
+    path(
+        'bulletins/<int:pk>/supprimer/',
+        views.supprimer_bulletin,
+        name='supprimer_bulletin'
+    ),
 ]
+
+
+
+
+
